@@ -1,0 +1,26 @@
+<agm-map 
+    *ngIf="currentLocation2"
+    [latitude]="currentLocation2.lat"
+    [longitude]="currentLocation2.lng"       
+    [zoom]="zoom">     
+    <agm-marker-cluster [imagePath]="'https://googlemaps.github.io/js-marker-clusterer/images/m'">
+      <agm-marker
+          *ngIf="currentLocation2"
+          [latitude]="currentLocation2.lat"
+          [longitude]="currentLocation2.lng"
+          [iconUrl]="'http://www.robotwoods.com/dev/misc/bluecircle.png'">
+        </agm-marker>     
+      <agm-marker 
+          *ngFor="let mark of profiles;"     
+          [latitude]="mark.lat"
+          [longitude]="mark.lng"
+          [iconUrl]='{"url": mark.photo,"scaledSize": {"height": 50, "width": 50}}'>              
+        <agm-info-window>
+          <strong>{{mark.name}}</strong>
+        </agm-info-window>    
+        </agm-marker>
+    </agm-marker-cluster>        
+</agm-map>
+
+
+

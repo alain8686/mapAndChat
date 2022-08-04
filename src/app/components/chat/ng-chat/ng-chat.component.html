@@ -1,0 +1,73 @@
+<div id="ng-chat" *ngIf="isBootstrapped">
+    <div id="ng-chat-people" [ngClass]="{'ng-chat-people-collapsed':isCollapsed}">
+        <a href="javascript:void(0);" class="ng-chat-title shadowed" (click)="onChatTitleClicked($event)">
+            <span>
+                {{localization.title}}
+            </span>
+        </a>
+        <input *ngIf="searchEnabled" id="ng-chat-search_friend" type="search" [placeholder]="localization.searchPlaceholder" [(ngModel)]="searchInput" />
+        <ul id="ng-chat-users" *ngIf="!isCollapsed" [ngClass]="{'offset-search': searchEnabled}">
+            <li *ngFor="let user of filteredUsers" (click)="openChatWindow(user, true, true)">
+                <div *ngIf="!user.avatar"  class="icon-wrapper">
+                    <i class="user-icon"></i>
+                </div>
+                <img *ngIf="user.avatar" alt="" class="avatar" height="30" width="30"  src="{{user.avatar}}"/>
+                <strong title="{{user.displayName}}">{{user.displayName}}</strong>
+                <span [ngClass]="{'ng-chat-user-status': true, 'online': user.status == UserStatus.Online, 'busy': user.status == UserStatus.Busy, 'away': user.status == UserStatus.Away, 'offline': user.status == UserStatus.Offline}" title="{{getStatusTitle(UserStatus[user.status])}}"></span>
+                <span *ngIf="unreadMessagesTotalByUser(user).length > 0" class="ng-chat-unread-messages-count">{{unreadMessagesTotalByUser(user)}}</span>
+            </li>
+        </ul>
+    </div>
+    <div *ngFor="let window of windows; let i = index" [ngClass]="{'ng-chat-window': true, 'ng-chat-window-collapsed': window.isCollapsed}" [ngStyle]="{'right': friendsListWidth + 20 + windowSizeFactor * i + 'px'}">
+        <ng-container *ngIf="window.isCollapsed">
+            <div class="ng-chat-title" (click)="onChatWindowClicked(window)">
+                <strong title="{{window.chattingTo.displayName}}">
+                    {{window.chattingTo.displayName}}
+                </strong>
+                <span [ngClass]="{'ng-chat-user-status': true, 'online': window.chattingTo.status == UserStatus.Online, 'busy': window.chattingTo.status == UserStatus.Busy, 'away': window.chattingTo.status == UserStatus.Away, 'offline': window.chattingTo.status == UserStatus.Offline}" title="{{getStatusTitle(UserStatus[window.chattingTo.status])}}"></span>
+                <span *ngIf="unreadMessagesTotal(window).length > 0" class="ng-chat-unread-messages-count">{{unreadMessagesTotal(window)}}</span>
+                <a href="javascript:void(0);" class="ng-chat-close" (click)="onCloseChatWindow(window)">X</a>
+            </div>
+        </ng-container>
+        <ng-container *ngIf="!window.isCollapsed">
+            <div class="ng-chat-title" (click)="onChatWindowClicked(window)">
+                <strong title="{{window.chattingTo.displayName}}">
+                    {{window.chattingTo.displayName}}
+                </strong>
+                <span [ngClass]="{'ng-chat-user-status': true, 'online': window.chattingTo.status == UserStatus.Online, 'busy': window.chattingTo.status == UserStatus.Busy, 'away': window.chattingTo.status == UserStatus.Away, 'offline': window.chattingTo.status == UserStatus.Offline}" title="{{getStatusTitle(UserStatus[window.chattingTo.status])}}"></span>
+                <span *ngIf="unreadMessagesTotal(window).length > 0" class="ng-chat-unread-messages-count">{{unreadMessagesTotal(window)}}</span>
+                <a href="javascript:void(0);" class="ng-chat-close" (click)="onCloseChatWindow(window)">X</a>
+            </div>
+            <div #chatMessages class="ng-chat-messages">
+                <div *ngIf="window.isLoadingHistory" class="ng-chat-loading-wrapper">
+                    <div class="loader">Loading history...</div>
+                </div>
+
+                <div *ngFor="let message of window.messages; let i = index" [ngClass]="{'ng-chat-message': true, 'ng-chat-message-received': message.fromId != userId}">
+                    <div *ngIf="!window.chattingTo.avatar && isAvatarVisible(window, message, i)" class="icon-wrapper">
+                        <i class="user-icon"></i>
+                    </div>
+                    <img *ngIf="window.chattingTo.avatar && isAvatarVisible(window, message, i)" alt="" class="avatar" height="30" width="30" [src]="window.chattingTo.avatar" />
+                    <span [innerHtml]="message.message | emojify:emojisEnabled | linkfy:linkfyEnabled"></span>
+                </div>
+            </div>            
+            <div class="popup-messages-footer">                  
+                <emoji-mart 
+                    [style]="{ position: 'relative', height: '200px', overflow: 'hidden'}" 
+                    showPreview="true" perLine="7" totalFrequentLines="1" (emojiSelect)="receiveEmogi(window, $event)"
+                    sheetSize="16" set="facebook" title="Pick your emoji…" [style.display]="window.emojiBarStatus ? 'block': 'none'">
+                </emoji-mart>
+                <input #chatWindowInput [ngModel]="window.newMessage | emojify:emojisEnabled" (ngModelChange)="window.newMessage=$event" type="text" (keydown)="onChatInputTyped($event, window)" [placeholder]="localization.messagePlaceholder" (blur)="toggleWindowFocus(window)" (focus)="toggleWindowFocus(window); window.emojiBarStatus=false"/>                        
+                <div class="btn-footer">
+                    <button class="bg_none"><i class="material-icons">ondemand_video</i></button>
+                    <button class="bg_none"><i class="material-icons">photo_camera</i></button>
+                    <span class="file-input-wrapper">                    
+                        <input hidden type="file" #uploader name="file" (change)="onLoadSendFile($event, window)"/>
+                        <button (click)="uploader.click()" class="bg_none"><i class="material-icons">attach_file</i></button>
+                    </span>               
+                    <button class="bg_none pull-right" (click)="window.emojiBarStatus=!window.emojiBarStatus"><i class="material-icons">thumb_up</i> </button>
+                </div>
+            </div>
+        </ng-container>
+    </div>
+</div>
